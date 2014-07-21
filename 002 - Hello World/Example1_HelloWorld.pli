@@ -1,0 +1,16 @@
+@model<transition>
+
+/* Transition P system model. */
+
+def main()
+{
+	/* Membrane structure. */
+	@mu = []'1;
+	
+	/* Initial multiset in membrane labelled by 1. */
+	@ms(1) = a*1;
+	
+	/* Rules in membrane labelled by 1. */
+	[a --> c]'1;
+	[a --> b]'1;
+}
