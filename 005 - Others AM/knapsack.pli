@@ -1,0 +1,52 @@
+/*
+Pérez-Jiménez, M.J.; Riscos-Núnez, A. A Linear Solution for the Knapsack Problem Using Active Membranes. Lecture Notes in Computer Science, 2933 (2004), 250–268.
+*/
+
+@model<membrane_division>
+
+def Knapsack(n,k,c)
+{
+    @mu = [[]'e]'s;
+    @ms(s) = z{0};
+    @ms(e) = e{0},ab*k,bb*c;
+    [e{i}]'e --> -[q]'e +[e{i}]'e : 0 <= i <= n;
+    +[e{i}]'e --> [e{i+1}]'e +[e{i+1}]'e : 0 <= i <= n-1;
+    [x{0} --> ab{0}]'e;
+    +[x{0} --> l]'e;
+    +[x{i} --> x{i-1}]'e : 1 <= i <= n;
+    [y{0} --> bb{0}]'e;
+    +[y{0} --> l]'e;
+    +[y{i} --> y{i-1}]'e : 1 <= i <= n;
+    -[q --> qb,q{0}]'e;
+    -[ab{0} --> a{0}]'e;
+    -[ab --> a]'e;
+    -[bb{0} --> bg{0}]'e;
+    -[bb --> bg]'e;
+    -[a{0}]'e --> []f;
+    [a]'e --> -[]f;
+    -[q{2*j} --> q{2*j+1}]'e : 0 <= j <= k;
+    [q{2*j+1} --> q{2*j+2}]'e : 0 <= j <= k-1;
+    -[q{2*j+1}]'e --> +[]f : 0 <= j <= k;
+    +[qb --> qb{0}]'e;
+    +[bg{0} --> b{0}]'e;
+    +[bg --> b]'e;
+    +[a --> l]'e;
+    +[b{0}]'e -->[]f;
+    [b]'e --> +[]f;
+    +[qb{2*j} --> qb{2*j+1}]'e : 0 <= j <= c;
+    [qb{2*j+1} --> qb{2*j+2}]'e : 0 <= j <= c-1;
+    +[qb{2*c+1}]'e --> []Yes;
+    [qb{2*c+1}]'e --> []Yes;
+    [z{i} --> z{i+1}]'s : 0 <= i <= 2*n + 2*k + 2*c + 5;
+    [z{2*n+2*k+2*c+6} --> d{1},No{0}]'s;
+    [d{1}]'s --> +[]d{1};
+    +[No{0} --> No]'s;
+    +[Yes]'s --> []Yes;
+    +[No]'s --> []No;
+}
+
+def main()
+{
+    call Knapsack(4,8,20);
+    @ms(e) += x{1}*5,y{1}*10,x{2}*3,y{2}*5,x{3}*10,y{3}*5,x{4}*20,y{4}*10;
+}

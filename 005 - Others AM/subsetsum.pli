@@ -1,0 +1,39 @@
+/*
+Pérez-Jiménez, M.J.; Riscos-Núñez, A. Solving the Subset Sum Problem by Active Membranes, New Generation Computing, 23 (4), 2005, 367-384.
+*/
+
+@model<membrane_division>
+
+def Sum(n,k)
+{
+    @mu = [[]'e]'s;
+    @ms(s) = z{0};
+    @ms(e) = e{0},ab*k;
+    [e{i}]'e --> -[q]'e +[e{i}]'e : 0 <= i <= n;
+    +[e{i}]'e --> [e{i+1}]'e +[e{i+1}]'e : 0 <= i <= n-1;
+    [x{0} --> ab{0}]'e;
+    +[x{0} --> l]'e;
+    +[x{i} --> x{i-1}]'e : 1 <= i <= n;
+    -[q --> q{0}]'e;
+    -[ab{0} --> a{0}]'e;
+    -[ab --> a]'e;
+    -[a{0}]'e --> []f;
+    [a]'e --> -[]f;
+    -[q{2*j} --> q{2*j+1}]'e : 0 <= j <= k;
+    [q{2*j+1} --> q{2*j+2}]'e : 0 <= j <= k-1;
+    -[q{2*k+1}]'e --> []Yes;
+    [q{2*k+1}]'e --> []#;
+    -[q{2*j+1}]'e --> -[]# : 0 <= j <= k-1;
+    [z{i} --> z{i+1}]'s : 0 <= i <= 2*n + 2*k + 1;
+    [z{2*n+2*k+2} --> d{1},No{0}]'s;
+    [d{1}]'s --> +[]d{1};
+    +[No{0} --> No]'s;
+    +[Yes]'s --> []Yes;
+    +[No]'s --> []No;
+}
+
+def main()
+{
+    call Sum(7,8);
+    @ms(e) += x{1}*3,x{2}*4,x{3}*5,x{4}*1,x{5}*9,x{6}*10,x{7}*4;
+}
