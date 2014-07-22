@@ -1,0 +1,114 @@
+@model<probabilistic>
+
+def main()
+{
+	call init_membrane_structure();
+	call init_multisets();
+	call init_rules();
+}
+
+def init_membrane_structure()
+{
+   @mu= [[[ [  ]'2 ]'1]'101,101]'global;
+}
+
+def init_multisets()
+{
+	let alpha = 0;
+	let alpha = alpha + q{1,j} : 1<= j <= 21;
+	let alpha = @ceil (alpha * 1.1 * 682);
+	@ms(1) += X{i,j}*q{i,j} : 0<=j<=k{i,4},1<=i<=7;
+	@ms(2) = C, B*alpha;
+}
+
+def init_rules()
+{
+	/************************************/
+	/* Reproduction rules for ungulates */
+	/************************************/	
+	/* Adult males */
+	/* r0.i.j */ [X{i,j}]'1 --> [Y{i,j}]'1 :: 1-k{i,13} : k{i,2}<=j<=k{i,4},2<=i<=7;
+	
+	/* Not fertile adult females */
+	/* r5.i.j */ [X{i,j}]'1 --> [Y{i,j}]'1 :: k{i,13} : k{i,3}<=j<=k{i,4},2<=i<=7;
+
+	/* Adult females that reproduce */	
+	/* r1.i.j */ [X{i,j}]'1 --> [Y{i,j},Y{i,0}]'1 :: k{i,5}*k{i,13} :  k{i,2}<=j<k{i,3},2<=i<=7,i<>3;
+	
+	/* Red Deer females produce 50% of female and 50% of male springs */
+	/* r2.j */ [X{3,j}]'1 --> [Y{3,j},Y{3,0}]'1 :: k{3,5}*k{3,13}*0.5 :  k{3,2}<=j<k{3,3};
+	/* r3.j */ [X{3,j}]'1 --> [Y{3,j},Y{4,0}]'1 :: k{3,5}*k{3,13}*0.5 :  k{3,2}<=j<k{3,3};
+	
+	/* Fertile adult females that do not reproduce */	
+	/* r4.i.j */ [X{i,j}]'1 --> [Y{i,j}]'1 :: (1-k{i,5})*k{i,13} : k{i,2}<=j<k{i,3},2<=i<=7;
+
+
+
+	/* Young ungulates that do not reproduce */
+	/* r6.i.j */ [X{i,j}]'1 --> [Y{i,j}]'1 :: 1 : 0<=j<k{i,2},2<=i<=7;
+
+	/****************************************/
+	/* Growth rules for the bearded vulture */
+	/****************************************/
+	/* r7.j */ [X{1,j}]'1 --> [Y{1,k{1,2}-1},Y{1,j}]'1 :: k{1,6}+k{1,10} : k{1,2}<=j<k{1,4};
+	/* r8.j */ [X{1,j}]'1 --> [Y{1,j}]'1 :: 1-k{1,6}-k{1,10} : k{1,2}<=j<k{1,4};
+	/* r9   */ [X{1,k{1,4}}]'1 --> [Y{1,k{1,2}-1},Y{1,k{1,4}}] :: k{1,6};
+	/* r10  */ [X{1,k{1,4}}]'1 --> [Y{1,k{1,4}}]'1 :: 1-k{1,6};
+
+	/*********************************/
+	/* Mortality rules for ungulates */
+	/*********************************/
+	/* Young ungulates which survive */	
+	/* r11.i.j */ Y{i,j}[ ]'2 --> [Z{i,j}]'2 :: 1-k{i,7}-k{i,8} : 0<=j<k{i,1},2<=i<=7;
+	
+	/* Young ungulates which die */
+	/* r12.i.j */ Y{i,j}[ ]'2 --> [B*k{i,11}]'2 :: k{i,8} : 0<=j<k{i,1},2<=i<=7;
+	
+	/* Young ungulates which are retired from the ecosystem */
+	/* r13.i.j */ Y{i,j}[]'2 --> [ ]'2 :: k{i,7} : 0<=j<k{i,1},2<=i<=7;
+
+	/* Adult ungulates that don't arrive at an average life expectancy */
+	/* Those which survive */
+	/* r14.i.j */ Y{i,j}[ ]'2 --> [Z{i,j}]'2 ::1-k{i,10} : k{i,1}<=j<k{i,4},2<=i<=7;
+	
+	/* Those which die */
+	/* r15.i.j */ Y{i,j}[ ]'2 --> [B*k{i,12}]'2::k{i,10} : k{i,1}<=j<k{i,4},2<=i<=7;
+
+	/* Ungulates that arrive at an average life expectancy*/
+	/* Those which die in the ecosystem */
+	/* r16.i */ Y{i,k{i,4}}[ ]'2 --> [B*k{i,12}]'2 :: k{i,9}+(1-k{i,9})*k{i,10} : 2<=i<=7;
+	
+	/* Those which die and are retired from the ecosystem */
+	/* r17.i */ Y{i,k{i,4}}[]'2 --> [ ]'2 :: (1-k{i,9})*(1-k{i,10}) : 2<=i<=7;
+
+	/*******************************************/
+	/* Mortality rules for the bearded vulture */
+	/*******************************************/
+	/* r18.j */ Y{1,j}[ ]'2 --> [Z{1,j}]'2 :: 1-k{1,10} : k{1,2}<=j<k{1,4};
+	/* r19.j */ Y{1,j}[ ]'2 --> []'2 :: k{1,10} : k{1,2}<=j<k{1,4};	
+ 	/* r20   */ Y{1,k{1,4}}[ ]'2 --> [Z{1,k{1,2}-1}]'2 :: 1 ;
+	/* r21   */ Y{1,k{1,2}-1}[ ]'2 --> [Z{1,k{1,2}-1}]'2 :: 1 ;
+
+	/*****************/	
+	/* Feeding rules */
+	/*****************/
+	/* r22.i.j */ [Z{i,j},B*k{i,14}]'2 --> X{i,j+1} +[ ]'2 :: 1 : 0<=j<=k{i,4},1<=i<=7;
+
+	/*****************/
+	/* Balance rules */
+	/*****************/
+	/* Elimination of remaining bones */
+	/* r23 */ +[B]'2 --> [ ]'2 :: 1;
+	
+	/* Adult animals that die because they have not enough food */
+	/* r24.i.j */ +[Z{i,j}]'2 --> [B*k{i,12}]'2 :: 1 : k{i,1}<=j<=k{i,4},1<=i<=7;
+	
+	/* Young animals that die because they have not enough food */
+	/* r25.i.j */ +[Z{i,j}]'2 --> [B*k{i,11}]'2 :: 1 : 0<=j<k{i,1},1<=i<=7;
+
+	/* Change the polarization */
+	/* r26 */ +[C]'2 --> [C]'2 :: 1;
+	
+}
+
+/* EOF */
