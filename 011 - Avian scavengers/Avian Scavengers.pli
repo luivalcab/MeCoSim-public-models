@@ -1,0 +1,199 @@
+@model<probabilistic>
+
+def main()
+{
+	call init_membrane_structure();
+	call init_multisets();
+	call init_rules();
+}
+
+def init_membrane_structure()
+{
+   @mu= [[[ [  ]'1 ]'0]'101,101 [[ [  ]'1 ]'0]'102,102]'global;
+}
+
+def init_multisets()
+{
+  @ms(0,{100+k}) += X{i,j,1}*q{i,j,k} : 1<=k<=2,0<=j<=g{i,6},1<=i<=n;
+  @ms(0) += d{i} : 1<=i<=n;
+  @ms(1) = R{0},F{0};
+ 
+  
+}
+
+def init_rules()
+{
+	/***********************/
+	/**Reproduction module**/
+	/***********************/
+	
+    /*Generating external contribution of different kinds of food*/	
+	/*r0*/ [F{0} --> B*alpha{k},M*beta{k},S*lambda{k},G*gamma{k},F]'1,{100+k} :: 1 : 1<=k<=2;
+	
+	/*control the maximum number of animals per species in the ecosystem*/
+	/*r1*/ d{i}[]'1,{100+k} --> [d{i},a{i}*(d{k,i,1}*0.9),e{i}*(d{k,i,1}*0.2)]'1,{100+k} :: 1 : 1<=k<=2,1<=i<=n;
+	
+	
+	/*Reproduction rules*/
+	/*Males that do not reproduce*/
+	/*r2*/ [X{i,j,y} --> Y{i,j,y}]'0 :: 1-k{i,1} : 1<=y<=T,g{i,4}<=j<g{i,5},1<=i<=n;
+	
+	/*Females at fertile ages that reproduce*/
+	/*r3*/ [X{i,j,y} --> Y{i,j,y},Y{i,0,y}*k{i,3}]'0 :: k{i,1}*k{i,2} : 1<=y<=T,g{i,4}<=j<g{i,5},1<=i<=4;
+	/*r4*/ [X{i,j,y} --> Y{i,j,y},Y{i,0,y}*k{i,3}]'0 :: k{i,1}*k{i,2} : 1<=y<=T,g{i,4}<=j<g{i,5},7<=i<=n;
+	/*r5*/ [X{5,j,y} --> Y{5,j,y},Y{5,0,y}*k{5,3}]'0 :: k{5,2}*0.5 : 1<=y<=T,g{5,4}<=j<g{5,5};
+	/*r6*/ [X{5,j,y} --> Y{5,j,y},Y{6,0,y}*k{5,3}]'0 :: k{5,2}*0.5 : 1<=y<=T,g{5,4}<=j<g{5,5};
+	
+	/*Female at fertile ages that do not reproduce*/
+	/*r7*/ [X{i,j,y} --> Y{i,j,y}]'0 :: k{i,1}*(1-k{i,2}) : 1<=y<=T,g{i,4}<=j<g{i,5},1<=i<=n;
+	
+	/*Adult non-fertile males and females*/
+	/*r8*/ [X{i,j,y} --> Y{i,j,y}]'0 :: 1 : 1<=y<=T,g{i,5}<=j<=g{i,6},1<=i<=n;
+	
+	/*Non-fertile young animals*/
+	/*r9  [X{i,j,y} --> Y{i,j,y}]'0 :: 1 : 1<=y<=T,1<=j<=g{i,4},1<=i<=n; */
+	
+	/*r9 fixed loop - we should loop until fertility age */ [X{i,j,y} --> Y{i,j,y}]'0 :: 1 : 1<=y<=T,1<=j<g{i,4},1<=i<=n;
+	
+	/***********************/
+	/***Mortality module****/
+	/***********************/
+	
+	/*Mortality rules*/
+	/*Young animals that survive*/
+	/*r10*/ Y{i,j,y}[]'1 --> +[Y{i,j,y},D{i}]'1 :: 1-m{i,1}-m{i,3} : 1<=y<=T,0<=j<g{i,3},1<=i<=n;
+	
+	/*Young animals that die and leave biomass in the form of meat and bones*/
+	/*r11*/ Y{i,j,y}[]'1 --> +[H{i}*(f{i,1}*g{i,2}*f{i,8}),C{i}*(f{i,2}*g{i,2}*f{i,9}),B{i}*(f{i,1}*g{i,2}*f{i,8}),M{i}*(f{i,2}*g{i,2}*f{i,9})]'1 :: m{i,1} : 1<=y<=T,0<=j<g{i,3},1<=i<=n;
+	
+	/*Young animals removed from the ecosystem that do not leave biomass*/
+    /*r12*/ Y{i,j,y}[]'1 --> +[b]'1 :: m{i,3} : 1<=y<=T,0<=j<g{i,3},1<=i<=n;
+
+    /*Adult animals that survive*/
+    /*r13*/ Y{i,j,y}[]'1 --> +[Y{i,j,y},D{i}]'1 :: 1-m{i,2} : 1<=y<=T,g{i,3}<=j<g{i,6},1<=i<=n;
+	
+	/*Adult animals that die and leave biomass*/
+	/*r14*/ Y{i,j,y}[]'1 --> +[H{i}*(f{i,3}*g{i,2}*f{i,8}),C{i}*(f{i,4}*g{i,2}*f{i,9}),B*(f{i,3}*g{i,2}*f{i,8}),M*(f{i,4}*g{i,2}*f{i,9})]'1 :: m{i,2} : 1<=y<=T,g{i,3}<=j<g{i,6},1<=i<=n;
+	
+	/*Animals that reach average life expectancy and die in the ecosystem leaving biomass*/
+	/*r15*/ Y{i,g{i,6},y}[]'1 --> +[H{i}*(f{i,3}*g{i,2}*f{i,8}),C{i}*(f{i,4}*g{i,2}*f{i,9}),B*(f{i,3}*g{i,2}*f{i,8}),M*(f{i,4}*g{i,2}*f{i,9})]'1 :: m{i,4}+(1-m{i,4})*m{i,2} : 1<=y<=T,1<=i<=n;
+	
+    /*Animal that reach average life expectancy and leave the ecosystem without leaving biomass*/
+	/*r16*/ [Y{i,g{i,6},y} --> #]'0 :: (1-m{i,4})*(1-m{i,2}) : 1<=y<=T,1<=i<=n;
+	
+	/*Randomness generation of the total amount of animals/
+	/*r17*/ [e{i}]'1 --> +[a{i}]'1 :: 0.5 : 1<=i<=n;
+	/*r18*/ [e{i}]'1 --> +[#]'1 :: 0.5 : 1<=i<=n;
+	
+	/***********************************************/
+	/***Feeding and density regulation module(1)****/
+	/***********************************************/
+    /*Checking whether maximum density has been reached*/
+    /*r19*/ +[D{i}*d{k,i,1},a{i}*(d{k,i,1}-d{k,i,2}) --> #]'1,{100+k} :: 1 : 1<=k<=2,1<=i<=n; 
+
+    /*Preparing animals for the feeding process*/
+    /*r20*/ +[Y{i,j,y} --> Z{i,j,y}]'1 :: 1 : 1<=y<=T,0<=j<g{i,6},1<=i<=n;
+	
+    /*P system synchronizer*/
+    /*r21 +[R{0}]'1 --> [R{1}]'0 :: 1; */
+
+	/*r21 fixed rule scheme */ +[R{0}]'1 --> R{1}+[]'1 :: 1;
+	
+    /*The rule is used in order to synchronize the model*/
+    /*r22*/ [R{i} --> R{i+1}]'0 :: 1 : 1<=i<=6;
+ 
+    /*Feeding process for animal with physical space in the ecosystem*/
+    /*r23 */ +[Z{i,j,y},a{i},B*(f{i,5}*g{i,2}),G*(f{i,6}*g{i,2}),M*(f{i,7}*g{i,2}),S*(f{i,7}*g{i,2}*(1-g{i,7}))]'1 --> [W{i,j,y}]'1 :: 1 : 0<=j<=g{i,6},1<=y<=T,1<=i<=n;
+    /*r24 */ +[Z{i,j,y},a{i},B*(f{i,5}*g{i,2}),G*(f{i,6}*g{i,2}),M*(f{i,7}*g{i,2}*(1-g{i,7})),S*(f{i,7}*g{i,2}*g{i,7})]'1 --> [W{i,j,y}]'1 :: 1 : 0<=j<=g{i,6},1<=y<=T,1<=i<=n;
+	
+    /**********************************/
+    /*Change in the environment module*/	
+    /**********************************/
+	/*1 step: object coming out to the environment*/
+	/*r25*/ [Z{i,j,y}]'1 --> Z{i,j,y}[]'1 :: 1 : 1<=y<=T,0<=j<=g{i,6},1<=i<=n;
+	
+	/*2 step: objects are sending to the environment*/
+	/*r26*/ [Z{i,j,y}]'0 --> Z{i,j,y}[]'0 :: 1 : 1<=y<=T,0<=j<=g{i,6},1<=i<=n;
+	
+	/*3 step: the objects changes the environment*/
+	/*re1*/ [[Z{i,j,y}]'{100+k} --> [Zp{i,j,y}]'{100+v}]'global :: p{i,k,v} : 1<=y<=T,0<=j<=g{i,6},1<=k<=2,1<=v<=2,1<=i<=n;
+	
+	/*4 step: teh object entersthe environment*/
+	/*r27*/ Zp{i,j,y}[]'0 --> [Zp{i,j,y}]'0 :: 1 : 1<=y<=T,0<=j<=g{i,6},1<=i<=n;
+	
+	/*5 step: the object enters the membrane 1*/
+	/*r28*/ Zp{i,j,y}[]'1 --> [Zp{i,j,y}]'1 :: 1 : 1<=y<=T,0<=j<=g{i,6},1<=i<=n;
+	
+	/***************************************/
+	/*Feeding and density regulation module*/
+	/***************************************/
+    /*Feeding and determination of the physical space available for animals coming from another environment*/
+    /*r29*/ [Zp{i,j,y},a{i},B*(f{i,5}*g{i,2}),G*(f{i,6}*g{i,2}),M*(f{i,7}*g{i,2}),S*(f{i,7}*g{i,2}*(1-g{i,7}))]'1 --> -[W{i,j,y}]'1 :: 1 : 1<=y<=T,0<=j<=g{i,6},1<=i<=n;
+    /*r30*/ [Zp{i,j,y},a{i},B*(f{i,5}*g{i,2}),G*(f{i,6}*g{i,2}),M*(f{i,7}*g{i,2}*(1-g{i,7})),S*(f{i,7}*g{i,2}*g{i,7})]'1 --> -[W{i,j,y}]'1 :: 1 : 1<=y<=T,0<=j<=g{i,6},1<=i<=n;
+    
+	/*r31*/ R{7}[]'1 --> -[R{8}]'1 :: 1;
+
+    /*****************/	
+    /*Updating module*/
+	/*****************/
+	/*The objects associated with the animals involved in objects X; they are prepared to begin the new cycle*/
+	/*r32*/ -[W{i,j,y}]'1 --> X{i,j+1,y+1}[]'1 :: 1 : 1<=y<=T,0<=j<=g{i,6},1<=i<=n;
+	
+	/*The objects are initialized*/
+	/*r33*/ -[R{8}]'1 --> [R{0}]'1 :: 1;
+	/*r34*/ -[F]'1 --> [F{0}]'1 :: 1;
+	
+	/*Objects created during the process must be eliminated*/
+	/*r35*/ -[G]'1 --> []'1 :: 1;
+	/*r36*/ -[M]'1 --> []'1 :: 1;
+	/*r37*/ -[S]'1 --> []'1 :: 1;
+	/*r38*/ -[B]'1 --> []'1 :: 1;
+	/*r39*/ -[a{i}]'1 --> []'1 :: 1 : 1<=i<=n;
+	/*r40*/ -[d{i}]'1 --> d{i}[]'1 :: 1 : 1<=i<=n;
+	/*r41*/ -[D{i}]'1 --> []'1 :: 1 : 1<=i<=n;
+	
+	/*It is necessary to count the objects H and C so they are sending to skin membrane*/
+	/*r42*/ -[H{i}]'1 --> H{i}[]'1 :: 1 : 1<=i<=n;
+	/*r43*/ -[C{i}]'1 --> C{i}[]'1 :: 1 : 1<=i<=n;
+	
+	/*r44 [b --> #]'1 :: 1; */
+	/*r44 fixed rule scheme to enable membrane charge change */ -[b]'1 --> [#]'1 :: 1;
+	
+	/*The animal without enough food or space dies and leaves biomass*/
+	/*r45*/ -[Zp{i,j,y}]'1 --> [H{i}*(f{i,1}*f{i,8}),C{i}*(f{i,2}*f{i,9}),B{i}*(f{i,1}*f{i,8}),M{i}*(f{i,2}*f{i,9})]'1 :: g{i,1} : 0<=j<g{i,3},1<=y<=T,1<=i<=n;
+	/*r46*/ -[Zp{i,j,y}]'1 --> [H{i}*(f{i,3}*f{i,8}),C{i}*(f{i,4}*f{i,9}),B{i}*(f{i,3}*f{i,8}),M{i}*(f{i,4}*f{i,9})]'1 :: g{i,1} : g{i,3}<=j<=g{i,6},1<=y<=T,1<=i<=n;
+	
+	/*r47 [Zp{i,j,y}]'1 -->[#]'1 :: 1-g{i,1} : 0<=j<=g{i,6},1<=y<=T,1<=i<=n; */
+	/*r47 fixed charge in left hand rule */ -[Zp{i,j,y}]'1 -->[#]'1 :: 1-g{i,1} : 0<=j<=g{i,6},1<=y<=T,1<=i<=n;
+	
+	/*These rules overlap with the first rules, loop beginning*/
+    /*r48*/ [H{i} --> #]'0 :: 1 : 1<=i<=n;
+    /*r49*/ [C{i} --> #]'0 :: 1 : 1<=i<=n;	
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
