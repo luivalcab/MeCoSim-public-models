@@ -1,0 +1,147 @@
+@model<probabilistic>
+
+def main()
+{
+	call init_membrane_structure();
+	call init_multisets();
+	call init_rules();
+}
+
+def init_membrane_structure()
+{
+   @mu= [[[ [  ]'2 ]'1]'101,101]'global;
+}
+
+def init_multisets()
+{
+	@ms(1) += X{i,j}*q{i,j} : 0<=j<=g{i,7},1<=i<=n;
+	@ms(1) += b{0,i} : 1<=i<=n;
+	@ms(2) = C;
+}
+
+def init_rules()
+{
+     /******************************/
+	 /*The set R of evolution rules*/
+     /******************************/
+	 /*r0*/ [C --> Gp*Beta,Cp]'2 :: 1;
+	 /*r1*/ [b{0,i} --> b{i}]'1 :: 1 : 1<=i<=n;
+  
+     /********************/
+     /*Reproduction-Rules*/
+     /********************/
+	 /*Adult males*/
+     /*r2*/ [X{i,j} --> Y{i,j}]'1 :: (1-k{i,1})*(1-k{i,4}) : g{i,5}<=j<=g{i,7},1<=i<=n;
+     
+     /*Adult females that reproduce*/
+     /*r3*/ [X{i,j} --> Y{i,j},Y{i,0}*k{i,3}]'1 :: k{i,2}*k{i,1}*(1-k{i,4}) : i<>5,g{i,5}<=j<g{i,6},1<=i<=n;
+     /*r4*/	[X{5,j} --> Y{5,j},Y{5,0}*k{5,3}]'1 :: 0.5*k{5,1}*k{5,2}: g{5,5}<=j<g{5,6}; 
+	 /*r5*/	[X{5,j} --> Y{5,j},Y{6,0}*k{5,3}]'1 :: 0.5*k{5,1}*k{5,2}: g{5,5}<=j<g{5,6};
+	 
+	 /*Adult females that do not reproduce*/ 
+	 /*r6*/ [X{i,j} --> Y{i,j}]'1 :: (1-k{i,2})*k{i,1}*(1-k{i,4}) : g{i,5}<=j<g{i,6},1<=i<=n;
+	 /*r7*/ [X{i,j} --> Y{i,j}]'1 :: k{i,1}*(1-k{i,4}) : g{i,6}<=j<=g{i,7},1<=i<=n;
+	 
+	 /*************************************/
+     /*Young animals that do not reproduce*/
+     /*************************************/
+	 /*r8*/ [X{i,j} --> Y{i,j}]'1 :: 1-k{i,4} : 1<=j<g{i,5},1<=i<=n;
+	 
+	 /**************/
+     /*Growth rules*/
+     /**************/
+	 /*r9*/ [X{i,j} --> Y{i,g{i,5}-1},Y{i,j}]'1 :: k{i,5}*k{i,4} : g{i,5}<=j<=g{i,7},1<=i<=n;
+	 /*r10*/ [X{i,j} --> Y{i,j}]'1 :: (1-k{i,5})*k{i,4} : g{i,5}<=j<=g{i,7},1<=i<=n;
+	 
+	 /*****************/
+     /*Mortality rules*/
+     /*****************/
+     /*r11*/ b{i}[]'2 --> +[b{i},a{i}*g{i,8}]'2 :: 1 : 1<=i<=n;
+	 
+	 /*Young animals that survive*/
+	 /*r12*/ Y{i,j}[]'2 --> +[V{i,j},T{i}]'2 :: 1-m{i,1}-m{i,3} : 0<=j<g{i,4},1<=i<=n;
+	 
+	 /*Young animals that die*/
+	 /*r13*/ Y{i,j}[]'2 --> +[Hp{i}*(f{i,1}*g{i,3}),Fp{i}*(f{i,2}*g{i,3}),Bp*(f{i,1}*g{i,3}),Mp*(f{i,2}*g{i,3})]'2 :: m{i,1} : 0<=j<g{i,4},1<=i<=n;
+	 
+	 /*Young animals that are retired from the ecosystem*/
+	 /*r14*/ [Y{i,j} --> #]'1 :: m{i,3} : 0<=j<g{i,4},1<=i<=n;
+	 
+	 /*Adult animals that do not reach an average life expectancy and survive*/
+	 /*r15*/ Y{i,j}[]'2 --> +[V{i,j},T{i}]'2 :: 1-m{i,2} : g{i,4}<=j<g{i,7},1<=i<=n;
+	 
+	 /*Adult animals that do not reach an average life expectancy and die*/
+	 /*r16*/ Y{i,j}[]'2 --> +[Hp{i}*(f{i,3}*g{i,3}),Fp{i}*(f{i,4}*g{i,3}),Bp*(f{i,3}*g{i,3}),Mp*(f{i,4}*g{i,3}),V{i,g{i,5}-1}*k{i,4},T{i}*k{i,4}]'2 :: m{i,2} : g{i,4}<=j<g{i,7},1<=i<=n;
+
+     /*Animals that reach an average life expectancy and die in the ecosystem*/
+	 /*r17*/ Y{i,g{i,7}}[]'2 --> +[Hp{i}*(f{i,3}*g{i,3}),Fp{i}*(f{i,4}*g{i,3}),Bp*(f{i,3}*g{i,3}),Mp*(f{i,4}*g{i,3}),V{i,g{i,5}-1}*k{i,4},T{i}*k{i,4}]'2 :: k{i,4}+(1-k{i,4})*(m{i,4}+(1-m{i,4})*m{i,2}) : 1<=i<=n;
+
+	 /*Animals that reach an average life expectancy and retire from the ecosystem*/
+	 /*r18*/ [Y{i,g{i,7}} --> #]'1 :: (1-k{i,4})*(1-m{i,4})*(1-m{i,2}) : 1<=i<=n;
+	 
+	 /******************/
+	 /*Regulation rules*/
+	 /******************/
+     /*r19*/ +[Gp --> G]'2 :: 1;
+     /*r20*/ +[Bp --> B]'2 :: 1;
+     /*r21*/ +[Mp --> M]'2 :: 1;
+     /*r22*/ +[Cp --> C]'2 :: 1;
+     /*r23*/ +[Hp{i} --> H{i}]'2 :: 1 : 1<=i<=n;
+     /*r24*/ +[Fp{i} --> F{i}]'2 :: 1 : 1<=i<=n;
+
+     /*********************************************************************/
+     /*Evaluation of the density of the different species in the ecosystem*/
+	 /*********************************************************************/
+	 /*r25*/ +[T{i}*g{i,8},a{i}*(g{i,8}-g{i,9}) --> #]'2 :: 1 : 1<=i<=n;
+     /*r26*/ +[V{i,j} --> Z{i,j}]'2 :: 1 : 0<=j<g{i,7},1<=i<=n;
+ 
+     /***************/
+     /*Feeding rules*/ 
+     /***************/	 
+     /*r27*/ /* +[Z{i,j},a{i},B*(f{i,5}*g{i,3}),G*(f{i,6}*g{i,3}),M*(f{i,7}*g{i,3})]'2 --> X{i,j+1}[]'2 :: 1 : 0<=j<=g{i,7},1<=i<=n; */
+	 
+	 /* We set fix this rule so we don't take into account feeding of herbvibores */
+	 /*r27*/ +[Z{i,j},a{i},B*(f{i,5}*g{i,3}),M*(f{i,7}*g{i,3})]'2 --> X{i,j+1}[]'2 :: 1 : 0<=j<=g{i,7},1<=i<=n;
+	 
+	 /***************/
+     /*Balance rules*/
+     /***************/
+	 /*Elimination of the remaining bones, meet and grass*/
+	 /*r28*/ [B --> #]'2 :: 1;
+	 /*r29*/ [G --> #]'2 :: 1;
+	 /*r30*/ [M --> #]'2 :: 1;
+	 /*r31*/ [T{i} --> #]'2 :: 1 : 1<=i<=n;
+     /*r32*/ [a{i} --> #]'2 :: 1 : 1<=i<=n;
+	 /*r33*/ [b{i}]'2 --> b{i}[]'2 :: 1 : 1<=i<=n;
+	 /*r34*/ [H{i}]'2 --> H{i}[]'2 :: 1 : 1<=i<=n;
+	 /*r35*/ [F{i}]'2 --> F{i}[]'2 :: 1 : 1<=i<=n;
+	 
+	 /*Young animals mortality*/
+	 /*r36*/ [Z{i,j} --> Hp{i}*f{i,1},Fp{i}*f{i,2},Bp{i}*f{i,1},Mp{i}*f{i,2}]'2 :: g{i,1} : 0<=j<g{i,4},1<=i<=n;
+	 /*r37*/ [Z{i,j}]'2 --> d{i}[]'2 :: 1-g{i,1} : 0<=j<g{i,4},1<=i<=n;
+	 
+	 /*Adult animals mortality*/
+	 /*r38*/ [Z{i,j} --> Hp{i}*f{i,3},Fp{i}*f{i,4},Bp{i}*f{i,3},Mp{i}*f{i,4}]'2 :: g{i,1} : g{i,4}<=j<=g{i,7},1<=i<=n;
+	 /*r39*/ [Z{i,j} --> #]'2 :: 1-g{i,1} : g{i,4}<=j<=g{i,7},1<=i<=n;
+	 /*r40*/ [H{i} --> #]'1 :: 1 : 1<=i<=n;
+	 /*r41*/ [F{i} --> #]'1 :: 1 : 1<=i<=n;
+ 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
