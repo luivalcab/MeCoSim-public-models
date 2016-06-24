@@ -1,0 +1,323 @@
+@model<infEnv_symport_antiport>
+
+def main()
+{	
+	call module_alphabet(n,m);
+	call module_init_conf(n,m);
+	call module_rules(n,m);
+	call module_input();
+}
+
+def module_alphabet (n,m)
+{
+	@msInfEnv += alpha{i,j,k}, alphap{i,j,k} : 0 <= k <= 1, 1 <= j <= 3*(n-1), 1 <= i <= n-1;
+	@msInfEnv += beta{j},betap{j},betapp{j},gamma{j},gammap{j},gammapp{j},gammappp{j} : 0 <= j <= 3*(n-1);
+	@msInfEnv += rho{i,j}, tau{i,j} : 1 <= j <= 3*n-1, 1 <= i <= n;
+	@msInfEnv += T{i,j},Tp{i,j},F{i,j},Fp{i,j} : i< j <= n, 1 <= i <= n-1;
+	@msInfEnv += T{i,i},Fp{i,i} : 1 <= i <= n;	
+	@msInfEnv += T{i},F{i} : 1 <= i <= n;	
+	@msInfEnv += A{i},Ap{i},B{i},Bp{i} : 2 <= i <= n + 1;
+	@msInfEnv += b{i},bp{i},c{i},cp{i} : 2 <= i <= n;
+	@msInfEnv += v{i} : 2 <= i <= n-1;
+	@msInfEnv += y{i},a{i},w{i} : 1 <= i <= n-1;
+	@msInfEnv += z{i} : 1 <= i <= n-2;
+	@msInfEnv += q{i,j},t{i,j},f{i,j},r{i,j},s{i,j} : i <= j <= n-1, 1 <= i <= n-1;
+	@msInfEnv += u{i,j} : i <= j <= n-2, 1 <= i <= n-2;	
+	@msInfEnv += e{i,j},_e{i,j} : 1 <= j <= m, 1 <= i <= n;	
+	@msInfEnv += d{i,j,k},_d{i,j,k} : 1 <= k <= n-1, 1 <= j <= m, 1 <= i <= n;
+	@msInfEnv += f{r} : 1 <= r <= 3*n+2*m;
+	@msInfEnv += fp{r} : 1 <= r <= 3*n+2*m+1;
+	@msInfEnv += delta{s,j} : 1 <= j <= 3*n, 0 <= s <= m;
+	@msInfEnv += E{s} : 0 <= s <= m;	
+	@msInfEnv += S;
+}
+
+def module_init_conf(n,m)
+{
+	@mu = [ [[]'2 []'3]'1 ]'environment;
+	
+	@ms1 += A{i},B{i} : 1 <= i <= n + 1;
+	@ms1 += T{i,j},F{i,j} : 1 <= j <= n, 1 <= i <= n;
+		
+	@ms2 += Ap{i},Bp{i} : 2 <= i <= n + 1;
+	@ms2 += Tp{i,j},Fp{i,j} : i < j <= n, 1 <= i <= n-1;
+	@ms2 += Fp{i,i} : 1 <= i <= n;
+			
+	@ms(1) += alpha{i,0,k},alphap{i,0,k} : 0 <= k <= 1, 1 <= i <= n-1;
+	@ms(1) += rho{i,0},tau{i,0} : 1 <= i <= n;
+	@ms(1) += beta{0},betap{0},betapp{0},gamma{0},gammap{0},gammapp{0},gammappp{0},sigma{0},sigmap{0};
+	@ms(1) += c{1},cp{1},b{1},bp{1},v{1},q{1,1}, f{0},yes;
+	@ms(1) += delta{j,0} : 0 <= j <= m;
+	@ms(1) += fp{r} : 1 <= r <= 3*n+2*m+1;
+		
+	@ms(2) += A{1},B{1};
+		
+	@ms(3) += fp{0},no;	
+}
+
+def module_rules(n,m)
+{	
+	call module_rules_R1(n,m);
+	call module_rules_R2(n,m);
+	call module_rules_R3(n,m);
+}
+
+def module_rules_R1 (n,m)
+{
+	alpha{i,j+1,k}[alpha{i,j,k}]'1 --> alpha{i,j,k}[alpha{i,j+1,k}]'1 : 0<=j<=2, 0 <= k <= 1, 1 <= i <= n-1;
+	alphap{i,j+1,k}[alphap{i,j,k}]'1 --> alphap{i,j,k}[alphap{i,j+1,k}]'1 : 0<=j<=2, 0 <= k <= 1, 1 <= i <= n-1;
+	
+	alpha{i,3*r+1,0},F{i,r+1}[alpha{i,3*r,0}]'1 --> alpha{i,3*r,0}[alpha{i,3*r+1,0},F{i,r+1}]'1 : 1 <= i <= r, 1 <= r <= n - 2;
+	alpha{i,3*r+1,1},T{i,r+1}[alpha{i,3*r,1}]'1 --> alpha{i,3*r,1}[alpha{i,3*r+1,1},T{i,r+1}]'1 : 1 <= i <= r, 1 <= r <= n - 2;	
+	alphap{i,3*r+1,0},Fp{i,r+1}[alphap{i,3*r,0}]'1 --> alphap{i,3*r,0}[alphap{i,3*r+1,0},Fp{i,r+1}]'1 : 1 <= i <= r, 1 <= r <= n - 2;
+	alphap{i,3*r+1,1},Tp{i,r+1}[alphap{i,3*r,1}]'1 --> alphap{i,3*r,1}[alphap{i,3*r+1,1},Tp{i,r+1}]'1 : 1 <= i <= r, 1 <= r <= n - 2;
+	
+	alpha{i,3*r+1,k}[alpha{i,3*r,k}]'1 --> alpha{i,3*r,k}[alpha{i,3*r+1,k}]'1 : 0 <= k <= 1, r + 1 <= i <= n - 1 , 1 <= r <= n - 2;
+	alphap{i,3*r+1,k}[alphap{i,3*r,k}]'1 --> alphap{i,3*r,k}[alphap{i,3*r+1,k}]'1 : 0 <= k <= 1, r + 1 <= i <= n - 1 , 1 <= r <= n - 2;	
+	
+	alpha{i,3*r+2,k}[alpha{i,3*r+1,k}]'1 --> alpha{i,3*r+1,k}[alpha{i,3*r+2,k}]'1 : 0 <= k <= 1, 1 <= i <= n - 1, 1 <= r <= n - 2;
+	alphap{i,3*r+2,k}[alphap{i,3*r+1,k}]'1 --> alphap{i,3*r+1,k}[alphap{i,3*r+2,k}]'1 : 0 <= k <= 1, 1 <= i <= n - 1, 1 <= r <= n - 2;
+	
+	alpha{i,3*r+3,k}*2[alpha{i,3*r+2,k}]'1 --> alpha{i,3*r+2,k}[alpha{i,3*r+3,k}*2]'1 : 0 <= k <= 1, 1 <= i <= n - 1, 1 <= r <= n - 2;
+	alphap{i,3*r+3,k}*2[alphap{i,3*r+2,k}]'1 --> alphap{i,3*r+2,k}[alphap{i,3*r+3,k}*2]'1 : 1 <= i <= n - 1, 1 <= r <= n - 2, 0 <= k <= 1;
+
+	F{i,n}[alpha{i,3*(n-1),0}]'1 --> alpha{i,3*(n-1),0}[F{i,n}]'1 : 1 <= i <= n - 1;	
+	T{i,n}[alpha{i,3*(n-1),1}]'1 --> alpha{i,3*(n-1),1}[T{i,n}]'1 : 1 <= i <= n - 1;
+	
+	Fp{i,n}[alphap{i,3*(n-1),0}]'1 --> alphap{i,3*(n-1),0}[Fp{i,n}]'1 : 1 <= i <= n - 1;
+	Tp{i,n}[alphap{i,3*(n-1),1}]'1 --> alphap{i,3*(n-1),1}[Tp{i,n}]'1 : 1 <= i <= n - 1;
+	
+	/* First group of "beta rules" */
+	
+	beta{3*r+1},B{r+2}[beta{3*r}]'1 --> beta{3*r}[beta{3*r+1},B{r+2}]'1 : 0 <= r <= n - 3;
+	betap{3*r+1},Bp{r+2}[betap{3*r}]'1 --> betap{3*r}[betap{3*r+1},Bp{r+2}]'1 : 0 <= r <= n - 3;
+	betapp{3*r+1},S[betapp{3*r}]'1 --> betapp{3*r}[betapp{3*r+1},S]'1 : 0 <= r <= n - 3;
+	
+	beta{3*r+2}[beta{3*r+1}]'1 --> beta{3*r+1}[beta{3*r+2}]'1 : 0 <= r <= n - 3;
+	betap{3*r+2}[betap{3*r+1}]'1 --> betap{3*r+1}[betap{3*r+2}]'1 : 0 <= r <= n - 3;
+	betapp{3*r+2}[betapp{3*r+1}]'1 --> betapp{3*r+1}[betapp{3*r+2}]'1 : 0 <= r <= n - 3;
+	
+	beta{3*r+3}*2[beta{3*r+2}]'1 --> beta{3*r+2}[beta{3*r+3}*2]'1 : 0 <= r <= n - 3;
+	betap{3*r+3}*2[betap{3*r+2}]'1 --> betap{3*r+2}[betap{3*r+3}*2]'1 : 0 <= r <= n - 3;
+	betapp{3*r+3}*2[betapp{3*r+2}]'1 --> betapp{3*r+2}[betapp{3*r+3}*2]'1 : 0 <= r <= n - 3;
+	
+	/* Second group of "beta rules" */
+	
+	beta{3*(n-2)+1},B{n}[beta{3*(n-2)}]'1 --> beta{3*(n-2)}[beta{3*(n-2)+1},B{n}]'1;
+	betap{3*(n-2)+1},Bp{n}[betap{3*(n-2)}]'1 --> betap{3*(n-2)}[betap{3*(n-2)+1},Bp{n}]'1;
+	betapp{3*(n-2)+1},S[betapp{3*(n-2)}]'1 --> betapp{3*(n-2)}[betapp{3*(n-2)+1},S]'1;	
+	beta{3*(n-2)+2}[beta{3*(n-2)+1}]'1 --> beta{3*(n-2)+1}[beta{3*(n-2)+2}]'1;
+	betap{3*(n-2)+2}[betap{3*(n-2)+1}]'1 --> betap{3*(n-2)+1}[betap{3*(n-2)+2}]'1;
+	betapp{3*(n-2)+2}[betapp{3*(n-2)+1}]'1 --> betapp{3*(n-2)+1}[betapp{3*(n-2)+2}]'1;	
+	beta{3*(n-2)+3}*2[beta{3*(n-2)+2}]'1 --> beta{3*(n-2)+2}[beta{3*(n-2)+3}*2]'1;
+	betap{3*(n-2)+3}*2[betap{3*(n-2)+2}]'1 --> betap{3*(n-2)+2}[betap{3*(n-2)+3}*2]'1;
+	betapp{3*(n-2)+3}*2[betapp{3*(n-2)+2}]'1 --> betapp{3*(n-2)+2}[betapp{3*(n-2)+3}*2]'1;
+	
+	/* Third group of "beta rules" */
+	
+	B{n+1}[beta{3*(n-1)}]'1 --> beta{3*(n-1)}[B{n+1}]'1;
+	Bp{n+1}[betap{3*(n-1)}]'1 --> betap{3*(n-1)}[Bp{n+1}]'1;
+	S[betapp{3*(n-1)}]'1 --> betapp{3*(n-1)}[S]'1;
+	
+	/* First group of "gamma rules" */
+	
+	gamma{3*r+1},T{r+1,r+1}[gamma{3*r}]'1 --> gamma{3*r}[gamma{3*r+1},T{r+1,r+1}]'1 : 0 <= r <= n - 3;
+	gammap{3*r+1},Fp{r+1,r+1}[gammap{3*r}]'1 --> gammap{3*r}[gammap{3*r+1},Fp{r+1,r+1}]'1 : 0 <= r <= n - 3;
+	gammapp{3*r+1},A{r+2}[gammapp{3*r}]'1 --> gammapp{3*r}[gammapp{3*r+1},A{r+2}]'1 : 0 <= r <= n - 3;
+	gammappp{3*r+1},Ap{r+2}[gammappp{3*r}]'1 --> gammappp{3*r}[gammappp{3*r+1},Ap{r+2}]'1 : 0 <= r <= n - 3;
+	
+	gamma{3*r+2}[gamma{3*r+1}]'1 --> gamma{3*r+1}[gamma{3*r+2}]'1 : 0 <= r <= n - 3;
+	gammap{3*r+2}[gammap{3*r+1}]'1 --> gammap{3*r+1}[gammap{3*r+2}]'1 : 0 <= r <= n - 3;
+	gammapp{3*r+2}[gammapp{3*r+1}]'1 --> gammapp{3*r+1}[gammapp{3*r+2}]'1 : 0 <= r <= n - 3;
+	gammappp{3*r+2}[gammappp{3*r+1}]'1 --> gammappp{3*r+1}[gammappp{3*r+2}]'1 : 0 <= r <= n - 3;
+	
+	gamma{3*r+3}*2[gamma{3*r+2}]'1 --> gamma{3*r+2}[gamma{3*r+3}*2]'1 : 0 <= r <= n - 3;
+	gammap{3*r+3}*2[gammap{3*r+2}]'1 --> gammap{3*r+2}[gammap{3*r+3}*2]'1 : 0 <= r <= n - 3;
+	gammapp{3*r+3}*2[gammapp{3*r+2}]'1 --> gammapp{3*r+2}[gammapp{3*r+3}*2]'1 : 0 <= r <= n - 3;
+	gammappp{3*r+3}*2[gammappp{3*r+2}]'1 --> gammappp{3*r+2}[gammappp{3*r+3}*2]'1 : 0 <= r <= n - 3;
+		
+	/* Second group of "gamma rules" */
+	
+	gamma{3*(n-2)+1},T{n-1,n-1}[gamma{3*(n-2)}]'1 --> gamma{3*(n-2)}[gamma{3*(n-2)+1},T{n-1,n-1}]'1;
+	gammap{3*(n-2)+1},Fp{n-1,n-1}[gammap{3*(n-2)}]'1 --> gammap{3*(n-2)}[gammap{3*(n-2)+1},Fp{n-1,n-1}]'1;
+	gammapp{3*(n-2)+1},A{n}[gammapp{3*(n-2)}]'1 --> gammapp{3*(n-2)}[gammapp{3*(n-2)+1},A{n}]'1;
+	gammappp{3*(n-2)+1},Ap{n}[gammappp{3*(n-2)}]'1 --> gammappp{3*(n-2)}[gammappp{3*(n-2)+1},Ap{n}]'1;	
+	gamma{3*(n-2)+2}[gamma{3*(n-2)+1}]'1 --> gamma{3*(n-2)+1}[gamma{3*(n-2)+2}]'1;
+	gammap{3*(n-2)+2}[gammap{3*(n-2)+1}]'1 --> gammap{3*(n-2)+1}[gammap{3*(n-2)+2}]'1;
+	gammapp{3*(n-2)+2}[gammapp{3*(n-2)+1}]'1 --> gammapp{3*(n-2)+1}[gammapp{3*(n-2)+2}]'1;
+	gammappp{3*(n-2)+2}[gammappp{3*(n-2)+1}]'1 --> gammappp{3*(n-2)+1}[gammappp{3*(n-2)+2}]'1;	
+	gamma{3*(n-2)+3}*2[gamma{3*(n-2)+2}]'1 --> gamma{3*(n-2)+2}[gamma{3*(n-2)+3}*2]'1;
+	gammap{3*(n-2)+3}*2[gammap{3*(n-2)+2}]'1 --> gammap{3*(n-2)+2}[gammap{3*(n-2)+3}*2]'1;
+	gammapp{3*(n-2)+3}*2[gammapp{3*(n-2)+2}]'1 --> gammapp{3*(n-2)+2}[gammapp{3*(n-2)+3}*2]'1;
+	gammappp{3*(n-2)+3}*2[gammappp{3*(n-2)+2}]'1 --> gammappp{3*(n-2)+2}[gammappp{3*(n-2)+3}*2]'1;
+		
+	/* Third group of "gamma rules" */
+	
+	T{n,n}[gamma{3*(n-1)}]'1 --> gamma{3*(n-1)}[T{n,n}]'1;
+	Fp{n,n}[gammap{3*(n-1)}]'1 --> gammap{3*(n-1)}[Fp{n,n}]'1;
+	A{n+1}[gammapp{3*(n-1)}]'1 --> gammapp{3*(n-1)}[A{n+1}]'1;
+	Ap{n+1}[gammappp{3*(n-1)}]'1 --> gammappp{3*(n-1)}[Ap{n+1}]'1;	
+	
+	/* First group of "rho-tau rules"*/
+	
+	rho{i,j+1}[rho{i,j}]'1 --> rho{i,j}[rho{i,j+1}]'1 : 0<=j<=2, 1 <= i <= n;
+	tau{i,j+1}[tau{i,j}]'1 --> tau{i,j}[tau{i,j+1}]'1 : 0<=j<=2, 1 <= i <= n;
+	
+	/* Second group of "rho-tau rules"*/
+	
+	rho{i,3*r+1}[rho{i,3*r}]'1 --> rho{i,3*r}[rho{i,3*r+1}]'1 : 1 <= r <= n - 2, 1 <= i <= n;
+	tau{i,3*r+1}[tau{i,3*r}]'1 --> tau{i,3*r}[tau{i,3*r+1}]'1 : 1 <= r <= n - 2, 1 <= i <= n;
+	 
+	rho{i,3*r+2}*2[rho{i,3*r+1}]'1 --> rho{i,3*r+1}[rho{i,3*r+2}*2]'1 : 1 <= r <= n - 2, 1 <= i <= n;
+	tau{i,3*r+2}*2[tau{i,3*r+1}]'1 --> tau{i,3*r+1}[tau{i,3*r+2}*2]'1 : 1 <= r <= n - 2, 1 <= i <= n;
+	
+	rho{i,3*r+3}[rho{i,3*r+2}]'1 --> rho{i,3*r+2}[rho{i,3*r+3}]'1 : 1 <= r <= n - 2, 1 <= i <= n;
+	tau{i,3*r+3}[tau{i,3*r+2}]'1 --> tau{i,3*r+2}[tau{i,3*r+3}]'1 : 1 <= r <= n - 2, 1 <= i <= n;
+	
+	/* Second group of "rho-tau rules"*/
+	
+	rho{i,3*(n-1)+1}[rho{i,3*(n-1)}]'1 --> rho{i,3*(n-1)}[rho{i,3*(n-1)+1}]'1 : 1 <= i <= n;
+	tau{i,3*(n-1)+1}[tau{i,3*(n-1)}]'1 --> tau{i,3*(n-1)}[tau{i,3*(n-1)+1}]'1 : 1 <= i <= n;
+	 
+	rho{i,3*(n-1)+2}*2[rho{i,3*(n-1)+1}]'1 --> rho{i,3*(n-1)+1}[rho{i,3*(n-1)+2}*2]'1 : 1 <= i <= n;
+	tau{i,3*(n-1)+2}*2[tau{i,3*(n-1)+1}]'1 --> tau{i,3*(n-1)+1}[tau{i,3*(n-1)+2}*2]'1 : 1 <= i <= n;
+	
+	T{i}[rho{i,3*(n-1)+2}]'1 --> rho{i,3*(n-1)+2}[T{i}]'1 : 1 <= i <= n;
+	F{i}[tau{i,3*(n-1)+2}]'1 --> tau{i,3*(n-1)+2}[F{i}]'1 : 1 <= i <= n;
+		
+	a{i}[A{i}]'1 --> A{i}[a{i}]'1 : 1 <= i <= n - 1;
+	a{i}[Ap{i}]'1 --> Ap{i}[a{i}]'1 : 1 <= i <= n - 1;
+	a{i}[B{i}]'1 --> B{i}[a{i}]'1 : 1 <= i <= n - 1;
+	a{i}[Bp{i}]'1 --> Bp{i}[a{i}]'1 : 1 <= i <= n - 1;
+	
+	z{i},w{i}[y{i}]'1 --> y{i}[z{i},w{i}]'1 : 1 <= i <= n - 2;	
+	w{n-1}[y{n-1}]'1 --> y{n-1}[w{n-1}]'1;
+	
+	c{i+1},cp{i+1}[w{i}]'1 --> w{i}[c{i+1},cp{i+1}]'1 : 1 <= i <= n - 1;		
+	v{i+1}[z{i}]'1 --> z{i}[v{i+1}]'1 : 1 <= i <= n - 2;
+		
+	y{i}*2[v{i}]'1 --> v{i}[y{i}*2]'1 : 1 <= i <= n - 1;
+	b{i+1},bp{i+1}[a{i}]'1 --> a{i}[b{i+1},bp{i+1}]'1 : 1 <= i <= n - 1;
+	
+	r{1,1}[q{1,1}]'1 --> q{1,1}[r{1,1}]'1;
+	r{i,j}*2[q{i,j}]'1 --> q{i,j}[r{i,j}*2]'1 : i <= j <= n - 1, 1 <= i <= n - 1;
+		
+	s{i,j},u{i,j}[r{i,j}]'1 --> r{i,j}[s{i,j},u{i,j}]'1 : i <= j <= n - 2, 1 <= i <= n - 2;
+	s{i,n-1}[r{i,n-1}]'1 --> r{i,n-1}[s{i,n-1}]'1 : 1 <= i <= n - 1;
+	
+	t{i,j},f{i,j}[s{i,j}]'1 --> s{i,j}[t{i,j},f{i,j}]'1 : i <= j <= n - 1, 1 <= i <= n - 1;
+			
+	q{1,j+1},q{2,j+1}[u{1,j}]'1 --> u{1,j}[q{1,j+1},q{2,j+1}]'1 : 1 <= j <= n - 2;
+	q{i+1,j+1}[u{i,j}]'1 --> u{i,j}[q{i+1,j+1}]'1 : 2 <= i <= j, 2 <= j <= n - 2;
+		
+	[T{i,j},t{i,j}]'1 --> T{i,j},t{i,j}[]'1 : 1 <= i <= j,1 <= j <= n;
+	[Tp{i,j},t{i,j}]'1 --> Tp{i,j},t{i,j}[]'1 : 1 <= i <= j,1 <= j <= n;
+	[F{i,j},f{i,j}]'1 --> F{i,j},f{i,j}[]'1 : 1 <= i <= j,1 <= j <= n;
+	[Fp{i,j},f{i,j}]'1 --> Fp{i,j},f{i,j}[]'1 : 1 <= i <= j,1 <= j <= n;
+	
+	d{i,j,1}*2[x{i,j}]'1 --> x{i,j}[d{i,j,1}*2]'1 : 1 <= j <= m, 1 <= i <= n;
+	_d{i,j,1}*2[_x{i,j}]'1 --> _x{i,j}[_d{i,j,1}*2]'1 : 1 <= j <= m, 1 <= i <= n;
+	
+	d{i,j,k+1}*2[d{i,j,k}]'1 --> d{i,j,k}[d{i,j,k+1}*2]'1 : 1 <= k <= n-2, 1 <= j <= m, 1 <= i <= n;
+	_d{i,j,k+1}*2[_d{i,j,k}]'1 --> _d{i,j,k}[_d{i,j,k+1}*2]'1 : 1 <= k <= n-2, 1 <= j <= m, 1 <= i <= n;
+	
+	e{i,j}[d{i,j,n-1}]'1 --> d{i,j,n-1}[e{i,j}]'1 : 1 <= j <= m, 1 <= i <= n;
+	_e{i,j}[_d{i,j,n-1}]'1 --> _d{i,j,n-1}[_e{i,j}]'1 : 1 <= j <= m, 1 <= i <= n;
+		
+	[E{0},f{3*n+2*m},yes]'1 --> E{0},f{3*n+2*m},yes[]'1;
+
+	[f{3*n+2*m},no]'1 --> f{3*n+2*m},no[]'1;
+	
+	delta{j,3*r+1}[delta{j,3*r}]'1 --> delta{j,3*r}[delta{j,3*r+1}]'1 : 0 <= r <= n - 1, 0 <= j <= m;
+	delta{j,3*r+2}*2[delta{j,3*r+1}]'1 --> delta{j,3*r+1}[delta{j,3*r+2}*2]'1 : 0 <= r <= n - 1, 0 <= j <= m;
+	
+	delta{j,3*r+3}[delta{j,3*r+2}]'1 --> delta{j,3*r+2}[delta{j,3*r+3}]'1 : 0 <= r <= n - 2, 0 <= j <= m;
+	
+	E{1}[delta{1,3*(n-1)+2}]'1 --> delta{1,3*(n-1)+2}[E{1}]'1;
+	
+	delta{j,3*(n-1)+3}[delta{j,3*(n-1)+2}]'1 --> delta{j,3*(n-1)+2}[delta{j,3*(n-1)+3}]'1 : 0 <= j <= m, j <> 1;
+	E{j}[delta{j,3*n}]'1 --> delta{j,3*n}[E{j}]'1 : 0 <= j <= m, j <> 1;
+	
+	f{i+1}[f{i}]'1 --> f{i}[f{i+1}]'1 : 0 <= i <= 3*n + 2*m - 1;
+	
+	/* garbage rules */
+	
+	[t{i,k},T{i,k}]'1 --> t{i,k},T{i,k}[]'1 : 1 <= i < k, 2 <= k <= n;
+	[t{i,k},Tp{i,k}]'1 --> t{i,k},Tp{i,k}[]'1 : 1 <= i < k, 2 <= k <= n;
+	[f{i,k},F{i,k}]'1 --> f{i,k},F{i,k}[]'1 : 1 <= i < k, 2 <= k <= n;
+	[f{i,k},Fp{i,k}]'1 --> f{i,k},Fp{i,k}[]'1 : 1 <= i < k, 2 <= k <= n;
+	
+	[t{i,i},T{i,i}]'1 --> t{i,i},T{i,i}[]'1 : 1 <= i <= n;
+	[f{i,i},Fp{i,i}]'1 --> f{i,i},Fp{i,i}[]'1 : 1 <= i <= n;
+	
+	[b{k},B{k+1}]'1 --> b{k},B{k+1}[]'1 : n - 1 <= k <= n;
+	[bp{k},Bp{k+1}]'1 --> bp{k},Bp{k+1}[]'1 : n - 1 <= k <= n;
+	[cp{k},Ap{k+1}]'1 --> cp{k},Ap{k+1}[]'1 : n - 1 <= k <= n;
+	[c{k},A{k+1}]'1 --> c{k},A{k+1}[]'1 : n - 1 <= k <= n;
+	
+}
+
+def module_rules_R2 (n,m)
+{	
+	[S]'2 --> []'2[]'2;
+	
+	c{i},cp{i}[A{i}]'2 --> A{i}[c{i},cp{i}]'2 : 1<= i <= n;
+	c{i},cp{i}[Ap{i}]'2 --> Ap{i}[c{i},cp{i}]'2 : 1<= i <= n;
+	
+	b{i},bp{i}[B{i}]'2 --> B{i}[b{i},bp{i}]'2 : 1<= i <= n;
+	b{i},bp{i}[Bp{i}]'2 --> Bp{i}[b{i},bp{i}]'2 : 1<= i <= n;
+	
+	B{i+1},S[b{i}]'2 --> b{i}[B{i+1},S]'2 : 1<= i <= n;
+	Bp{i+1}[bp{i}]'2 --> bp{i}[Bp{i+1}]'2 : 1<= i <= n;
+	
+	T{i,i},A{i+1}[c{i}]'2 --> c{i}[T{i,i},A{i+1}]'2 : 1<= i <= n;
+	Fp{i,i},Ap{i+1}[cp{i}]'2 --> cp{i}[Fp{i,i},Ap{i+1}]'2 : 1<= i <= n;
+		
+	E{1}[B{n+1}]'2 --> B{n+1}[E{1}]'2;
+	E{1}[Bp{n+1}]'2 --> Bp{n+1}[E{1}]'2;
+	
+	E{0}[A{n+1}]'2 --> A{n+1}[E{0}]'2;
+	E{0}[Ap{n+1}]'2 --> Ap{n+1}[E{0}]'2;
+	
+	t{i,j}[T{i,j}]'2 --> T{i,j}[t{i,j}]'2 : 1 <= i <= j,1 <= j <= n;
+	t{i,j}[Tp{i,j}]'2 --> Tp{i,j}[t{i,j}]'2 : 1 <= i <= j,1 <= j <= n;
+	
+	f{i,j}[F{i,j}]'2 --> F{i,j}[f{i,j}]'2 : 1 <= i <= j,1 <= j <= n;
+	f{i,j}[Fp{i,j}]'2 --> Fp{i,j}[f{i,j}]'2 : 1 <= i <= j,1 <= j <= n;
+	
+	T{i,j+1},Tp{i,j+1}[t{i,j}]'2 --> t{i,j}[T{i,j+1},Tp{i,j+1}]'2 : 1 <= i <= j,1 <= j <= n-1;
+	F{i,j+1},Fp{i,j+1}[f{i,j}]'2 --> f{i,j}[F{i,j+1},Fp{i,j+1}]'2 : 1 <= i <= j,1 <= j <= n-1;
+	
+	T{i}[T{i,n}]'2 --> T{i,n}[T{i}]'2 : 1 <= i <= n;
+	T{i}[Tp{i,n}]'2 --> Tp{i,n}[T{i}]'2 : 1 <= i <= n;
+	
+	F{i}[F{i,n}]'2 --> F{i,n}[F{i}]'2 : 1 <= i <= n;
+	F{i}[Fp{i,n}]'2 --> Fp{i,n}[F{i}]'2 : 1 <= i <= n;
+	
+	e{i,j}[E{j},T{i}]'2 --> E{j},T{i}[e{i,j}]'2 : 1 <= j <= m, 1 <= i <= n;
+	_e{i,j}[E{j},F{i}]'2 --> E{j},F{i}[_e{i,j}]'2 : 1 <= j <= m, 1 <= i <= n;
+	
+	E{j+1},T{i}[e{i,j}]'2 --> e{i,j}[E{j+1},T{i}]'2 : 1 <= j <= m - 1, 1 <= i <= n;
+	E{j+1},F{i}[_e{i,j}]'2 --> _e{i,j}[E{j+1},F{i}]'2 : 1 <= j <= m - 1, 1 <= i <= n;
+
+	[e{i,m},E{0}]'2 --> e{i,m},E{0}[]'2 : 1 <= i <= n;
+	[_e{i,m},E{0}]'2 --> _e{i,m},E{0}[]'2 : 1 <= i <= n;
+}
+
+def module_rules_R3 (n,m)
+{	
+	/* R3 */
+	
+	fp{r+1}[fp{r}]'3 --> fp{r}[fp{r+1}]'3 : 0 <= r <= 3*n+2*m;
+	[fp{3*n+2*m+1},no]'3 --> fp{3*n+2*m+1},no[]'3;
+}
+	
+
+def module_input()
+{
+/* We define here the input for the P system */
+/* Let suppose m = clause number and n = variable numbers */
+	
+@ms(1) += _x{variable{i},clause{i}}*valn{i}, x{variable{i},clause{i}}*val{i} : 1<=i<=nvals;
+	
+}
