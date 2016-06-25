@@ -1,0 +1,184 @@
+@model<infEnv_symport_antiport>
+
+def main()
+{
+	let n = 3;  /* nodes */
+	let p = 3;  /* edges */
+
+	call module_init_conf(n);
+	call module_rules(n,p);
+	call module_input_instance();
+}
+
+def module_init_conf(n)
+{
+
+	@mu = [[ []'2 []'3 []'4 []'5 []'6 []'7 []'8 []'9 []'10 []'11
+			 []'a{1,1} []'a{1,2} []'a{1,3} []'a{2,1} []'a{2,2} []'a{2,3} 
+			 []'e{1,1,1} []'e{1,1,2} []'e{1,1,3} []'e{1,2,1} []'e{1,2,2}
+			 []'e{1,2,3} []'e{1,3,1} []'e{1,3,2} []'e{1,3,3}
+			 []'e{2,1,1} []'e{2,1,2} []'e{2,1,3} []'e{2,2,1} []'e{2,2,2}
+			 []'e{2,2,3} []'e{2,3,1} []'e{2,3,2} []'e{2,3,3}
+			 []'e{3,1,1} []'e{3,1,2} []'e{3,1,3} []'e{3,2,1} []'e{3,2,2}
+			 []'e{3,2,3} []'e{3,3,1} []'e{3,3,2} []'e{3,3,3}
+			]'1]'environment;
+
+	@msInfEnv += alpha{r} : 1 <= r <= n^3 + 6;
+
+	@ms(1) += alpha{0};
+	@ms(1) += beta{r} : 1 <= r <= n^3 + 7;
+	@ms(1) += bp{r},bpp{r},bppp{r} : 1 <= r <= n^3 - 1;
+	@ms(1) += cp{r},cpp{r},cppp{r},cpppp{r} : 1 <= r <= n^3 - 1;
+	@ms(2) += a*n,b,c;
+	@ms(3) += bp{n^3};
+	@ms(4) += bpp{n^3};
+	@ms(5) += bppp{n^3};
+	@ms(6) += cp{n^3};
+	@ms(7) += cpp{n^3};
+	@ms(8) += cppp{n^3};
+	@ms(9) += cpppp{n^3};
+	@ms(10) += yes;
+	@ms(11) += no,beta{0}; 
+	@ms(a{1,j}) = ap{n^3} : 1 <= j <= n;
+	@ms(a{2,j}) = app{n^3} : 1 <= j <= n;
+	@ms(e{i,j,k}) = epp{i,j,k,n^3} : 1<=i<=n, 1<=j<=n, 1<=k<=n;
+}
+
+def module_rules(n,p)
+{
+
+	/* R1 */
+
+	alpha{r+1}[alpha{r}]'1 --> alpha{r}[alpha{r+1}]'1 : 0 <= r <= n^3+5;
+	[yes]'1 --> yes[]'1;
+	[no,alpha{n^3+6}]'1 --> no,alpha{n^3+6}[]'1;
+
+	/* R2 */
+
+	[e{i,j,k}]'2 --> [ep{i,j,k}]'2 [sharp]'2 : 
+	1 <= i <= n, 1 <= j <= n, 1 <= k <= n;
+
+	ap[a]'2 --> a[ap]'2;
+	app[ap]'2 --> ap[app]'2;
+	bp[b]'2 --> b[bp]'2;
+	bpp[bp]'2 --> bp[bpp]'2;
+	bppp[bpp]'2 --> bpp[bppp]'2;
+	cp[c]'2 --> c[cp]'2;
+	cpp[cp]'2 --> cp[cpp]'2;
+	cppp[cpp]'2 --> cpp[cppp]'2;
+	cpppp[cppp]'2 --> cppp[cpppp]'2;
+	[app,bppp]'2 --> app,bppp[]'2;
+	[bppp,cpppp]'2 --> bppp,cpppp[]'2;
+
+	epp{i,j,k}[ep{i,j,k}]'2 --> ep{i,j,k}[epp{i,j,k}]'2 : 
+	1 <= i <= n, 1 <= ip <= n, 1 <= j <= n, 1 <= jp <= n, 
+	1 <= k <= n, 1 <= kp <= n;
+
+	[epp{i,j,k},epp{i,jp,kp}]'2 --> epp{i,j,k},epp{i,jp,kp}[]'2 : 
+	1 <= i <= n, 1 <= ip <= n, 1 <= j <= n, 1 <= jp <= n, 
+	1 <= k <= n, 1 <= kp <= n;
+
+	[epp{i,j,k},epp{ip,j,kp}]'2 --> epp{i,j,k},epp{ip,j,kp}[]'2 : 
+	1 <= i <= n, 1 <= ip <= n, 1 <= j <= n, 1 <= jp <= n, 
+	1 <= k <= n, 1 <= kp <= n;
+
+	[epp{i,j,k},epp{ip,jp,k+1}]'2 --> epp{i,j,k},epp{ip,jp,k+1}[]'2 : 
+	1 <= i <= n, j <> ip, 1 <= ip <= n, 1 <= j <= n, 1 <= jp <= n, 
+	1 <= k <= n, 1 <= kp <= n;
+
+	[epp{i,j,k},epp{ip,jp,k}]'2 --> epp{i,j,k},epp{ip,jp,k}[]'2 : 
+	1 <= i <= n, 1 <= ip <= n, 1 <= j <= n, 1 <= jp <= n, 
+	1 <= k <= n, 1 <= kp <= n;
+
+	[app,epp{i,j,k}]'2 --> app,epp{i,j,k}[]'2 : 1 <= i <= n, 
+	1 <= j <= n, 1 <= k <= n;
+
+	/* R3 */
+
+	bp{r-1}[bp{r}]'3 --> bp{r}[bp{r-1}]'3 : n*p + 1 <= r <= n^3;
+	[bp{r}]'3 --> [bp{r-1}]'3 [bp{r-1}]'3 : 2 <= r <= n*p;
+	[bp{1}]'3 --> [bp]'3 [bp]'3;
+	[bp]'3 --> bp[]'3;
+
+	/* R4 */
+
+	bpp{r-1}[bpp{r}]'4 --> bpp{r}[bpp{r-1}]'4 : n*p + 1 <= r <= n^3;
+	[bpp{r}]'4 --> [bpp{r-1}]'4 [bpp{r-1}]'4 : 2 <= r <= n*p;
+	[bpp{1}]'4 --> [bpp]'4 [bpp]'4;
+	[bpp]'4 --> bpp[]'4;
+
+	/* R5 */
+
+	bppp{r-1}[bppp{r}]'5 --> bppp{r}[bppp{r-1}]'5 : n*p + 1 <= r <= n^3;
+	[bppp{r}]'5 --> [bppp{r-1}]'5 [bppp{r-1}]'5 : 2 <= r <= n*p;
+	[bppp{1}]'5 --> [bppp]'5 [bppp]'5;
+	[bppp]'5 --> bppp[]'5;
+
+	/* R6 */
+
+	cp{r-1}[cp{r}]'6 --> cp{r}[cp{r-1}]'6 : n*p + 1 <= r <= n^3;
+	[cp{r}]'6 --> [cp{r-1}]'6 [cp{r-1}]'6 : 2 <= r <= n*p;
+	[cp{1}]'6 --> [cp]'6 [cp]'6;
+	[cp]'6 --> cp[]'6;
+
+	/* R7 */
+
+	cpp{r-1}[cpp{r}]'7 --> cpp{r}[cpp{r-1}]'7 : n*p + 1 <= r <= n^3;
+	[cpp{r}]'7 --> [cpp{r-1}]'7 [cpp{r-1}]'7 : 2 <= r <= n*p;
+	[cpp{1}]'7 --> [cpp]'7 [cpp]'7;
+	[cpp]'7 --> cpp[]'7;
+
+	/* R8 */
+
+	cppp{r-1}[cppp{r}]'8 --> cppp{r}[cppp{r-1}]'8 : n*p + 1 <= r <= n^3;
+	[cppp{r}]'8 --> [cppp{r-1}]'8 [cppp{r-1}]'8 : 2 <= r <= n*p;
+	[cppp{1}]'8 --> [cppp]'8 [cppp]'8;
+	[cppp]'8 --> cppp[]'8;
+
+	/* R9 */
+
+	cpppp{r-1}[cpppp{r}]'9 --> cpppp{r}[cpppp{r-1}]'9 : n*p + 1 <= r <= n^3;
+	[cpppp{r}]'9 --> [cpppp{r-1}]'9 [cpppp{r-1}]'9 : 2 <= r <= n*p;
+	[cpppp{1}]'9 --> [cpppp]'9 [cpppp]'9;
+	[cpppp]'9 --> cpppp[]'9;
+
+	/* R10 */
+
+	alpha{n^3+6},cpppp[]'10 --> [alpha{n^3+6},cpppp]'10;
+	[cpppp,yes]'10 --> cpppp,yes[]'10;
+
+	/* R11 */
+
+	beta{r+1}[beta{r}]'11 --> beta{r}[beta{r+1}]'11 : 0 <= r <= n^3 + 6;
+	[beta{n^3+7},no]'11 --> beta{n^3+7},no[]'11;
+
+	/* Ra{1,j} : 1 <= j <= n */
+
+	[ap{r}]'a{1,j} --> [ap{r-1}]'a{1,j} [ap{r-1}]'a{1,j} : 2 <= r <= n^3, 1 <= j <= n;
+
+	[ap{1}]'a{1,j} --> [ap]'a{1,j} [ap]'a{1,j} : 1 <= j <= n;
+	[ap]'a{1,j} --> ap[]'a{1,j} : 1 <= j <= n;
+
+	/* Ra{2,j} : 1 <= j <= n */
+
+	[app{r}]'a{2,j} --> [app{r-1}]'a{2,j} [app{r-1}]'a{2,j} : 2 <= r <= n^3, 1 <= j <= n;
+
+	[app{1}]'a{2,j} --> [app]'a{2,j} [app]'a{2,j} : 1 <= j <= n;
+	[app]'a{2,j} --> app[]'a{2,j} : 1 <= j <= n;
+
+	/* Re{i,j,k} : 1 <= i,j,k <= n */
+
+	[epp{i,j,k,r}]'e{i,j,k} --> [epp{i,j,k,r-1}]'e{i,j,k} [epp{i,j,k,r-1}]'e{i,j,k} : 
+	2 <= r <= n^3, 1 <= i <= n, 1 <= j <= n, 1 <= k <= n;
+
+	[epp{i,j,k,1}]'e{i,j,k} --> [epp{i,j,k}]'e{i,j,k} [epp{i,j,k}]'e{i,j,k} : 
+	1 <= i <= n, 1 <= j <= n, 1 <= k <= n;
+
+	[epp{i,j,k}]'e{i,j,k} --> epp{i,j,k}[]'e{i,j,k} : 
+	1 <= i <= n, 1 <= j <= n, 1 <= k <= n;
+}
+
+def module_input_instance()
+{
+	@ms(2) += e{1,2,1},e{1,2,2},e{1,2,3},e{3,1,1},e{3,1,2},e{3,1,3},e{3,2,1},e{3,2,2},e{3,2,3};
+}
