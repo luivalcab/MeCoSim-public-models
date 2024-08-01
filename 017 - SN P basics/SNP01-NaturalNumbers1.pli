@@ -27,7 +27,7 @@ def spiking_init_conf()
 
 def spiking_rules()
 {
-	[a --> a]'1 "a*2";
+	[a --> a]'1 "a{2}";
 	[a --> #]'1;
 	[a --> a]'2;
 	[a --> a]'2 :: 1;
